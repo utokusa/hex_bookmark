@@ -29,30 +29,11 @@ function App(props) {
             </Typography>
         </Toolbar>
       </AppBar>
-      <InputBinaryFile />
+      <BinaryFileInput />
       <Bookmark />
     </div>
   );
 }
-
-// const styles = {
-//   app: {
-//     textAlign: 'center'
-//   },
-//   input: {
-//     display: 'none',
-//   },
-//   root: {
-//     width: '100%',
-//     overflowX: 'auto',
-//   },
-//   table: {
-//     minWidth: 650,
-//   },
-//   button: {
-//     margin: theme.spacing(1),
-//   },
-// };
 
 const useStyles = makeStyles(theme => ({
   app: {
@@ -72,6 +53,12 @@ const useStyles = makeStyles(theme => ({
     margin: theme.spacing(1),
   },
 }));
+
+const styles = theme => ({
+  input: {
+    display: 'none',
+  },
+});
 
 class Bookmark extends React.Component {
   constructor(props) {
@@ -185,9 +172,17 @@ function SimpleTable() {
   );
 }
 
-class InputBinaryFile extends React.Component {
+class BinaryFileInput extends React.Component {
   constructor(props) {
     super(props);
+    this.fileInput = React.createRef();
+    this.test = "aaa";
+    this.state = { filename: "file name here" };
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(newFilename) {
+    this.setState({ filename: newFilename });
   }
 
   render() {
@@ -199,31 +194,44 @@ class InputBinaryFile extends React.Component {
         p={1}
         style={{ width: '40rem', height: '5rem' }}
       >
-        <UploadButtons />
-        <label>  -------- Show input file name here. --------</label>
+        <FileInput
+          fin={this.fileInput}
+          testaaa={this.test}
+          fname={this.state.filename}
+          onSubmit={this.handleSubmit}
+        />
+        <label>  -------- {this.state.filename} --------  </label>
       </Box>
     );
   }
 }
 
-function UploadButtons(props) {
-  const classes = useStyles(props);
-  return (
-    <div>
-      <input
-        accept="image/*"
-        className={classes.input}
-        id="contained-button-file"
-        multiple
-        type="file"
-      />
-      <label htmlFor="contained-button-file">
-        <Button variant="contained" color="primary" component="span">
-          Load a binary file
-        </Button>
-      </label>
-    </div>
-  );
+class FileInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+  handleSubmit(event) {
+    event.preventDefault();
+    let msg = "Select File"
+    if (typeof this.props.fin.current.files[0] !== 'undefined') {
+      msg = this.props.fin.current.files[0].name;
+    }
+    this.props.onSubmit(msg);
+  }
+
+  render() {
+    return (
+      <form onSubmit={this.handleSubmit}>
+        <label>
+          Input Binary File :
+          <input type="file" ref={this.props.fin} />
+        </label>
+        <br />
+        <button type="submit">Submit</button>
+      </form>
+    );
+  }
 }
 
 export default App;
