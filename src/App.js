@@ -177,12 +177,19 @@ class BinaryFileInput extends React.Component {
     super(props);
     this.fileInput = React.createRef();
     this.test = "aaa";
-    this.state = { filename: "file name here" };
+    this.state = { fileInfo: "file name here", data: "" };
     this.handleSubmit = this.handleSubmit.bind(this);
+
+    // Check for the various File API support.
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+      // Great success! All the File APIs are supported.
+    } else {
+      alert('The File APIs are not fully supported in this browser.');
+    }
   }
 
-  handleSubmit(newFilename) {
-    this.setState({ filename: newFilename });
+  handleSubmit(newFileInfo, newData) {
+    this.setState({ fileInfo: newFileInfo, data: newData });
   }
 
   render() {
@@ -197,10 +204,15 @@ class BinaryFileInput extends React.Component {
         <FileInput
           fin={this.fileInput}
           testaaa={this.test}
-          fname={this.state.filename}
+          fname={this.state.fileInfo}
           onSubmit={this.handleSubmit}
         />
-        <label>  -------- {this.state.filename} --------  </label>
+        <div>
+          <label>  -------- {this.state.fileInfo} --------  </label>
+        </div>
+        <div>
+          <label> {this.state.data} </label>
+        </div>
       </Box>
     );
   }
@@ -214,10 +226,32 @@ class FileInput extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
     let msg = "Select File"
-    if (typeof this.props.fin.current.files[0] !== 'undefined') {
-      msg = this.props.fin.current.files[0].name;
+    let f = this.props.fin.current.files[0];
+    let data = "abc";
+    let foo = "a";
+    if (typeof f !== 'undefined') {
+      msg = f.name + " : " + f.lastModifiedDate.toLocaleDateString();
+      let reader = new FileReader();
+      reader.onload = function (e) {
+        let buffer = reader.result;
+        let view = new DataView(buffer);
+        data = view.getInt32(0).toString();
+        // console.log(data);
+        foo = "b";
+        this.props.onSubmit(msg, data);
+        // e.onSubmit(msg, data);
+        return;
+      }
+      reader.onerror = function (e) {
+        console.error('reading failed');
+      };
+      reader.onload = reader.onload.bind(this);
+      reader.readAsArrayBuffer(f);
     }
-    this.props.onSubmit(msg);
+    else {
+      this.props.onSubmit(msg, data);
+    }
+
   }
 
   render() {
