@@ -177,37 +177,14 @@ function BookmarkTable(props) {
                 data.push(newData);
                 return { ...prevState, data };
               });
+              readValue(props.fin, newData, newData);
             }, 0);
           }),
-        // onRowUpdate: (newData, oldData) =>
-        //   new Promise(resolve => {
-        //     resolve();
-        //     if (oldData) {
-        //       setState(prevState => {
-        //         const data = [...prevState.data];
-        //         // newData['value'] = oldData['value'] + 1;
-        //         // parseInt(string, radix);
-        //         newData['value'] = readValue(props.fin, oldData, newData);
-        //         data[data.indexOf(oldData)] = newData;
-        //         // readValue(props.fin, data, oldData, newData);
-        //         return { ...prevState, data };
-        //       });
-        //     }
-        //   }),
         onRowUpdate: (newData, oldData) =>
           new Promise(resolve => {
             resolve();
             if (oldData) {
               readValue(props.fin, oldData, newData);
-              // setState(prevState => {
-              //   const data = [...prevState.data];
-              //   // newData['value'] = oldData['value'] + 1;
-              //   // parseInt(string, radix);
-              //   newData['value'] = readValue(props.fin, oldData, newData);
-              //   data[data.indexOf(oldData)] = newData;
-              //   // readValue(props.fin, data, oldData, newData);
-              //   return { ...prevState, data };
-              // });
             }
           }),
         onRowDelete: oldData =>
