@@ -1,36 +1,18 @@
 import React from 'react';
 // import './App.css';
 import { makeStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import EditIcon from '@material-ui/icons/Edit';
-import SaveIcon from '@material-ui/icons/Save';
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import Fab from '@material-ui/core/Fab';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+import MaterialTable from 'material-table';
 
 function App(props) {
   const classes = useStyles(props);
   return (
     <div className={classes.app}>
-      <AppBar position="static" color="default">
-        <Toolbar>
-          <Typography variant="title" color="inherit">
-            Hex Bookmark
-            </Typography>
-        </Toolbar>
-      </AppBar>
-      <BinaryFileInput />
-      <Bookmark />
+      <HexBookmark />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></link>
     </div>
   );
 }
@@ -54,124 +36,197 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const styles = theme => ({
-  input: {
-    display: 'none',
-  },
-});
+// const styles = theme => ({
+//   input: {
+//     display: 'none',
+//   },
+// });
 
-class Bookmark extends React.Component {
+// --------------------------------------------------------------------------
+class HexBookmark extends React.Component {
   constructor(props) {
     super(props);
+    this.fileInput = React.createRef();
+    this.state = { fileInfo: "file name here", data: "" };
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
+
+  handleSubmit(newFileInfo, newData) {
+    this.setState({ fileInfo: newFileInfo, data: newData });
+    console.log(newData);
+  }
+
+  render() {
+    return (
+      <div>
+        <AppBar position="static" color="default">
+          <Toolbar>
+            <Typography variant="h3" color="inherit">
+              Hex Bookmark
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <BinaryFileInput
+          fin={this.fileInput}
+          onSubmit={this.handleSubmit}
+          fileInfo={this.state.fileInfo}
+          data={this.state.data}
+        />
+        <Bookmark
+          fin={this.fileInput}
+        />
+      </div>
+    );
+  }
+}
+
+// --------------------------------------------------------------------------
+class Bookmark extends React.Component {
+  // constructor(props) {
+  //   super(props);
+  // }
 
   render() {
     return (
       <Box
         boxShadow={3}
         bgcolor="background.paper"
-        m={6}
+        m={5}
         p={1}
-        style={{ width: '60rem', height: '30rem' }}
+        style={{ width: '45rem', height: '50rem' }}
       >
-        <BookmarkControl />
-        <BookmarkTable />
+        <BookmarkTable
+          fin={this.props.fin}
+        />
       </Box>
+
     );
   }
 }
 
-function BookmarkControl() {
-  const classes = useStyles();
+function BookmarkTable(props) {
+  const [state, setState] = React.useState({
+    columns: [
+      { title: 'Hex Offset', field: 'hexOffset' },
+      {
+        title: 'Data Type',
+        field: 'dataType',
+        lookup: { 0: 'int16', 1: 'int32', 2: 'int64' },
+      },
+      { title: 'Value', field: 'value', type: 'numeric', editable: 'never' },
+      { title: 'Hex', field: 'hex', editable: 'never' },
+    ],
+    data: [
+      { hexOffset: '0x00000000', dataType: 2, value: 0, hex: '0x00000000' },
+    ],
+  });
+
+  function readValue(fin, oldData, newData) {
+    let f = fin.current.files[0];
+    let readData = -1;
+    if (typeof f !== 'undefined') {
+      let reader = new FileReader();
+      reader.onload = function (e) {
+        let buffer = reader.result;
+        let view = new DataView(buffer);
+        console.log('newData[hexOffsets]')
+        console.log(newData['hexOffset'])
+        const offsetInt = parseInt(newData['hexOffset']);
+        console.log('offsetInt')
+        console.log(offsetInt)
+        if (isNaN(offsetInt)) {
+          setState(prevState => {
+            const data = [...prevState.data];
+            newData['value'] = 'Invalid Offset';
+            data[data.indexOf(oldData)] = newData;
+            return { ...prevState, data };
+          });
+          return;
+        }
+        const readData = view.getInt32(offsetInt);
+        setState(prevState => {
+          const data = [...prevState.data];
+          newData['value'] = readData;
+          data[data.indexOf(oldData)] = newData;
+          return { ...prevState, data };
+        });
+      }
+      reader.onerror = function (e) {
+        console.log('onerror');
+      };
+      reader.onload = reader.onload.bind(this);
+      reader.readAsArrayBuffer(f);
+    }
+    else {
+      console.log('case undefined');
+    }
+  }
+
   return (
-    <div>
-      <Fab color="primary" aria-label="add">
-        <AddIcon />
-      </Fab>
-      <Fab color="secondary" aria-label="edit">
-        <EditIcon />
-      </Fab>
-      <Button
-        variant="contained"
-        color="primary"
-        size="large"
-        className={classes.button}
-        startIcon={<SaveIcon />}
-      >
-        Save Bookmark
-      </Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        size="large"
-        className={classes.button}
-        startIcon={<SaveIcon />}
-      >
-        Load Bookmark
-      </Button>
-    </div>
+    <MaterialTable
+      title="Bookmarks"
+      columns={state.columns}
+      data={state.data}
+      editable={{
+        onRowAdd: newData =>
+          new Promise(resolve => {
+            setTimeout(() => {
+              resolve();
+              setState(prevState => {
+                const data = [...prevState.data];
+                data.push(newData);
+                return { ...prevState, data };
+              });
+            }, 0);
+          }),
+        // onRowUpdate: (newData, oldData) =>
+        //   new Promise(resolve => {
+        //     resolve();
+        //     if (oldData) {
+        //       setState(prevState => {
+        //         const data = [...prevState.data];
+        //         // newData['value'] = oldData['value'] + 1;
+        //         // parseInt(string, radix);
+        //         newData['value'] = readValue(props.fin, oldData, newData);
+        //         data[data.indexOf(oldData)] = newData;
+        //         // readValue(props.fin, data, oldData, newData);
+        //         return { ...prevState, data };
+        //       });
+        //     }
+        //   }),
+        onRowUpdate: (newData, oldData) =>
+          new Promise(resolve => {
+            resolve();
+            if (oldData) {
+              readValue(props.fin, oldData, newData);
+              // setState(prevState => {
+              //   const data = [...prevState.data];
+              //   // newData['value'] = oldData['value'] + 1;
+              //   // parseInt(string, radix);
+              //   newData['value'] = readValue(props.fin, oldData, newData);
+              //   data[data.indexOf(oldData)] = newData;
+              //   // readValue(props.fin, data, oldData, newData);
+              //   return { ...prevState, data };
+              // });
+            }
+          }),
+        onRowDelete: oldData =>
+          new Promise(resolve => {
+            setTimeout(() => {
+              resolve();
+              setState(prevState => {
+                const data = [...prevState.data];
+                data.splice(data.indexOf(oldData), 1);
+                return { ...prevState, data };
+              });
+            }, 0);
+          }),
+      }}
+    />
   );
 }
 
-class BookmarkTable extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return (
-      <div>
-        <SimpleTable />
-      </div>
-    );
-  }
-}
-
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-
-function SimpleTable() {
-  const classes = useStyles();
-
-  return (
-    <Paper className={classes.root}>
-      <Table className={classes.table} aria-label="simple table">
-        <TableHead>
-          <TableRow>
-            <TableCell>Dessert (100g serving)</TableCell>
-            <TableCell align="right">Calories</TableCell>
-            <TableCell align="right">Fat&nbsp;(g)</TableCell>
-            <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-            <TableCell align="right">Protein&nbsp;(g)</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map(row => (
-            <TableRow key={row.name}>
-              <TableCell component="th" scope="row">
-                {row.name}
-              </TableCell>
-              <TableCell align="right">{row.calories}</TableCell>
-              <TableCell align="right">{row.fat}</TableCell>
-              <TableCell align="right">{row.carbs}</TableCell>
-              <TableCell align="right">{row.protein}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Paper>
-  );
-}
-
+// --------------------------------------------------------------------------
 class BinaryFileInput extends React.Component {
   constructor(props) {
     super(props);
@@ -189,7 +244,8 @@ class BinaryFileInput extends React.Component {
   }
 
   handleSubmit(newFileInfo, newData) {
-    this.setState({ fileInfo: newFileInfo, data: newData });
+    // this.setState({ fileInfo: newFileInfo, data: newData });
+    this.props.onSubmit(newFileInfo, newData);
   }
 
   render() {
@@ -202,16 +258,14 @@ class BinaryFileInput extends React.Component {
         style={{ width: '40rem', height: '5rem' }}
       >
         <FileInput
-          fin={this.fileInput}
-          testaaa={this.test}
-          fname={this.state.fileInfo}
+          fin={this.props.fin}
           onSubmit={this.handleSubmit}
         />
         <div>
-          <label>  -------- {this.state.fileInfo} --------  </label>
+          <label>  -------- {this.props.fileInfo} --------  </label>
         </div>
         <div>
-          <label> {this.state.data} </label>
+          <label> {this.props.data} </label>
         </div>
       </Box>
     );
@@ -228,7 +282,6 @@ class FileInput extends React.Component {
     let msg = "Select File"
     let f = this.props.fin.current.files[0];
     let data = "abc";
-    let foo = "a";
     if (typeof f !== 'undefined') {
       msg = f.name + " : " + f.lastModifiedDate.toLocaleDateString();
       let reader = new FileReader();
@@ -236,10 +289,7 @@ class FileInput extends React.Component {
         let buffer = reader.result;
         let view = new DataView(buffer);
         data = view.getInt32(0).toString();
-        // console.log(data);
-        foo = "b";
         this.props.onSubmit(msg, data);
-        // e.onSubmit(msg, data);
         return;
       }
       reader.onerror = function (e) {
