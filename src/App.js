@@ -107,17 +107,17 @@ class Bookmark extends React.Component {
 function BookmarkTable(props) {
   const [state, setState] = React.useState({
     columns: [
-      { title: 'Hex Offset', field: 'hexOffset' },
+      { title: 'Offset', field: 'offset' },
       {
         title: 'Data Type',
         field: 'dataType',
         lookup: { 0: 'int16', 1: 'int32', 2: 'int64' },
       },
       { title: 'Value', field: 'value', type: 'numeric', editable: 'never' },
-      { title: 'Hex', field: 'hex', editable: 'never' },
+      { title: 'Hex Value', field: 'hexValue', editable: 'never' },
     ],
     data: [
-      { hexOffset: '0x00000000', dataType: 2, value: 0, hex: '0x00000000' },
+      { offset: '0x00000000', dataType: 2, value: 0, hexValue: '0x00000000' },
     ],
   });
 
@@ -129,9 +129,9 @@ function BookmarkTable(props) {
       reader.onload = function (e) {
         let buffer = reader.result;
         let view = new DataView(buffer);
-        console.log('newData[hexOffsets]')
-        console.log(newData['hexOffset'])
-        const offsetInt = parseInt(newData['hexOffset']);
+        console.log('newData[offsets]')
+        console.log(newData['offset'])
+        const offsetInt = parseInt(newData['offset']);
         console.log('offsetInt')
         console.log(offsetInt)
         if (isNaN(offsetInt)) {
