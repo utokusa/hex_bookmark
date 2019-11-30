@@ -117,13 +117,31 @@ function BookmarkTable(props) {
       { title: 'Hex Value', field: 'hexValue', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', dataType: 2, value: 0, hexValue: '0x00000000' },
+      { offset: '0x00000000', dataType: 2, value: 1, hexValue: '0x00000000' },
     ],
   });
+
+
+  function validateInput(oldData, newData) {
+    const offsetInt = parseInt(newData['offset']);
+    if (isNaN(offsetInt)) {
+      newData['offset'] = '0x0000'
+    }
+    if (typeof newData['dataType'] == 'undefined') {
+      newData['dataType'] = 2;
+    }
+    setState(prevState => {
+      const data = [...prevState.data];
+      data[data.indexOf(oldData)] = newData;
+      return { ...prevState, data };
+    });
+  }
 
   function readValue(fin, oldData, newData) {
     let f = fin.current.files[0];
     let readData = -1;
+    console.log('newData[dataType]')
+    console.log(newData['dataType'])
     if (typeof f !== 'undefined') {
       let reader = new FileReader();
       reader.onload = function (e) {
@@ -177,6 +195,7 @@ function BookmarkTable(props) {
                 data.push(newData);
                 return { ...prevState, data };
               });
+              validateInput(newData, newData);
               readValue(props.fin, newData, newData);
             }, 0);
           }),
@@ -184,6 +203,7 @@ function BookmarkTable(props) {
           new Promise(resolve => {
             resolve();
             if (oldData) {
+              validateInput(oldData, newData);
               readValue(props.fin, oldData, newData);
             }
           }),
