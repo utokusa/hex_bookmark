@@ -105,22 +105,43 @@ class Bookmark extends React.Component {
 }
 
 function BookmarkTable(props) {
+  const dtypeEnum = {
+    int8: 0,
+    uint8: 1,
+    int16: 2,
+    uint16: 3,
+    int32: 4,
+    uint32: 5,
+    float32: 6,
+    float64: 7,
+  };
+  const dtypeLookup = {
+    [dtypeEnum.int8]: 'int8',
+    [dtypeEnum.uint8]: 'uint8',
+    [dtypeEnum.int16]: 'int16',
+    [dtypeEnum.uint16]: 'uint16',
+    [dtypeEnum.int32]: 'int32',
+    [dtypeEnum.uint32]: 'uint32',
+    [dtypeEnum.float32]: 'float32',
+    [dtypeEnum.float64]: 'float64',
+  }
+  const defaultDtype = dtypeEnum.int32;
   const [state, setState] = React.useState({
     columns: [
       { title: 'Offset', field: 'offset' },
       {
         title: 'Data Type',
         field: 'dataType',
-        lookup: { 0: 'int16', 1: 'int32', 2: 'int64' },
+        lookup: dtypeLookup,
       },
       { title: 'Value', field: 'value', type: 'numeric', editable: 'never' },
       { title: 'Hex Value', field: 'hexValue', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', dataType: 2, value: 1, hexValue: '0x00000000' },
+      { offset: '0x00000000', dataType: defaultDtype, value: '', hexValue: '' },
     ],
+    isLittleEndian: false,
   });
-
 
   function validateInput(oldData, newData) {
     const offsetInt = parseInt(newData['offset']);
@@ -128,7 +149,8 @@ function BookmarkTable(props) {
       newData['offset'] = '0x0000'
     }
     if (typeof newData['dataType'] == 'undefined') {
-      newData['dataType'] = 2;
+      newData['dataType'] = defaultDtype;
+      console.log('defaultDtype :', defaultDtype);
     }
     setState(prevState => {
       const data = [...prevState.data];
@@ -137,6 +159,37 @@ function BookmarkTable(props) {
     });
   }
 
+  function readAsType(dtype, dataView, offsetInt) {
+    let res = 0;
+    if (dtype === dtypeEnum.int8) {
+      res = dataView.getInt8(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.uint8) {
+      res = dataView.getUint8(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.int16) {
+      res = dataView.getInt16(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.uint16) {
+      res = dataView.getUint16(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.int32) {
+      res = dataView.getInt32(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.uint32) {
+      res = dataView.getUint32(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.float32) {
+      res = dataView.getFloat32(offsetInt, state.isLittleEndian);
+    }
+    else if (dtype === dtypeEnum.float64) {
+      res = dataView.getFloat64(offsetInt, state.isLittleEndian);
+    }
+    else {
+      console.log('Unkown Data Type!');
+    }
+    return res;
+  }
   function readValue(fin, oldData, newData) {
     let f = fin.current.files[0];
     let readData = -1;
@@ -161,7 +214,8 @@ function BookmarkTable(props) {
           });
           return;
         }
-        const readData = view.getInt32(offsetInt);
+        const dtypeInt = parseInt(newData.dataType);
+        const readData = readAsType(dtypeInt, view, offsetInt)
         setState(prevState => {
           const data = [...prevState.data];
           newData['value'] = readData;
