@@ -130,6 +130,7 @@ function BookmarkTable(props) {
   const [state, setState] = React.useState({
     columns: [
       { title: 'Offset', field: 'offset' },
+      { title: 'Name', field: 'name' },
       {
         title: 'Data Type',
         field: 'dataType',
@@ -139,7 +140,7 @@ function BookmarkTable(props) {
       { title: 'Hex Value', field: 'hexValue', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', dataType: defaultDtype, value: '', hexValue: '' },
+      { offset: '0x00000000', name: '', dataType: defaultDtype, value: '', hexValue: '' },
     ],
     isLittleEndian: false,
   });
