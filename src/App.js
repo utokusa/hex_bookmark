@@ -94,7 +94,7 @@ class Bookmark extends React.Component {
         bgcolor="background.paper"
         m={5}
         p={1}
-        style={{ width: '45rem', height: '50rem' }}
+        style={{ width: '70rem', height: '50rem' }}
       >
         <BookmarkTable
           fin={this.props.fin}
@@ -146,7 +146,9 @@ function BookmarkTable(props) {
 
   function validateInput(oldData, newData) {
     const offsetInt = parseInt(newData['offset']);
-    if (isNaN(offsetInt)) {
+    const minOffset = 0;
+    const maxOffset = 18446744073709551615; // = Math.pow(2, 64) - 1
+    if (isNaN(offsetInt) || offsetInt < minOffset || offsetInt > maxOffset) {
       newData['offset'] = '0x0000'
     }
     if (typeof newData['dataType'] == 'undefined') {
@@ -260,6 +262,21 @@ function BookmarkTable(props) {
     });
     updateTableValues();
   }
+
+  function formatOffset(newData) {
+    setState(prevState => {
+      const data = [...prevState.data];
+      const offsetInt = parseInt(newData['offset']);
+      const radix = 16;
+      const border = 4294967295; // Math.pow(2, 32) - 1
+      const numDigits = offsetInt > border ? 16 : 8;
+      console.log('numDigits : ', numDigits);
+      newData['offset'] = '0x' + ((offsetInt).toString(radix)).toUpperCase().padStart(numDigits, '0');
+      data[data.indexOf(newData)] = newData;
+      return { ...prevState, data };
+    });
+  }
+
   const chipLabel = state.isLittleEndian ? "Little Endian" : "Big Endian";
   return (
     <MaterialTable
@@ -277,6 +294,7 @@ function BookmarkTable(props) {
                 return { ...prevState, data };
               });
               validateInput(newData, newData);
+              formatOffset(newData);
               readValue(props.fin, newData, newData);
             }, 0);
           }),
@@ -285,6 +303,7 @@ function BookmarkTable(props) {
             resolve();
             if (oldData) {
               validateInput(oldData, newData);
+              formatOffset(newData);
               readValue(props.fin, oldData, newData);
             }
           }),
