@@ -3,9 +3,10 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
+import Chip from '@material-ui/core/Chip';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import MaterialTable from 'material-table';
+import MaterialTable, { MTableToolbar } from 'material-table';
 
 function App(props) {
   const classes = useStyles(props);
@@ -234,6 +235,32 @@ function BookmarkTable(props) {
     }
   }
 
+  function updateTableValues() {
+    console.log('updateTableValues');
+    setState(prevState => {
+      const data = [...prevState.data];
+      console.log('data : ', data);
+      for (let x in data) {
+        console.log(data[x]);
+        validateInput(data[x], data[x]);
+        readValue(props.fin, data[x], data[x]);
+      }
+      return { ...prevState, data };
+    });
+  }
+
+  function toggleByteOder() {
+    setState(prevState => {
+      // const isLittleEndian = !prevState.isLittleEndian;
+      // console.log('prevState.isLittleEndian : ', prevState.isLittleEndian);
+      // return { ...prevState, isLittleEndian }
+      prevState.isLittleEndian = !prevState.isLittleEndian;
+      console.log('prevState.isLittleEndian : ', prevState.isLittleEndian);
+      return { ...prevState }
+    });
+    updateTableValues();
+  }
+  const chipLabel = state.isLittleEndian ? "Little Endian" : "Big Endian";
   return (
     <MaterialTable
       title="Bookmarks"
@@ -273,6 +300,20 @@ function BookmarkTable(props) {
             }, 0);
           }),
       }}
+      components={{
+        Toolbar: props => (
+          <div>
+            <MTableToolbar {...props} />
+            <div>
+              <Chip
+                label={chipLabel}
+                color="secondary"
+                onClick={toggleByteOder}
+              />
+            </div>
+          </div>
+        ),
+      }}
     />
   );
 }
@@ -282,7 +323,6 @@ class BinaryFileInput extends React.Component {
   constructor(props) {
     super(props);
     this.fileInput = React.createRef();
-    this.test = "aaa";
     this.state = { fileInfo: "file name here", data: "" };
     this.handleSubmit = this.handleSubmit.bind(this);
 
