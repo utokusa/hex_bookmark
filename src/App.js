@@ -252,6 +252,21 @@ function BookmarkTable(props) {
     }
     return res;
   }
+
+  function buf2hex(byteArray) { // buffer is an ArrayBuffer
+    let hexArr = [];
+    hexArr.push(...Array.prototype.map.call(
+      byteArray,
+      x => ('00' + x.toString(16).toUpperCase()).slice(-2)
+    ));
+    return hexArr.join('');
+  }
+
+  function readAsHex(buffer, offsetInt, dataSizeInt) {
+    let byteArr = new Uint8Array(buffer);
+    return buf2hex(byteArr.slice(offsetInt, dataSizeInt));
+  }
+
   function readValue(fin, oldData, newData) {
     let f = fin.current.files[0];
     console.log('newData[dataType]')
@@ -277,10 +292,12 @@ function BookmarkTable(props) {
         }
         const dtypeInt = parseInt(newData.dataType);
         const dataSizeInt = parseInt(newData.dataSize);
-        const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt)
+        const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt);
+        const hexData = readAsHex(buffer, offsetInt, dataSizeInt);
         setState(prevState => {
           const data = [...prevState.data];
           newData['value'] = readData;
+          newData['hexValue'] = hexData;
           data[data.indexOf(oldData)] = newData;
           return { ...prevState, data };
         });
