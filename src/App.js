@@ -115,6 +115,7 @@ function BookmarkTable(props) {
     uint32: 5,
     float32: 6,
     float64: 7,
+    ascii: 8,
   };
   const dtypeLookup = {
     [dtypeEnum.int8]: 'int8',
@@ -125,8 +126,21 @@ function BookmarkTable(props) {
     [dtypeEnum.uint32]: 'uint32',
     [dtypeEnum.float32]: 'float32',
     [dtypeEnum.float64]: 'float64',
+    [dtypeEnum.ascii]: 'ascii',
+  }
+  const dtypeSize = {
+    [dtypeEnum.int8]: 1,
+    [dtypeEnum.uint8]: 1,
+    [dtypeEnum.int16]: 2,
+    [dtypeEnum.uint16]: 2,
+    [dtypeEnum.int32]: 4,
+    [dtypeEnum.uint32]: 4,
+    [dtypeEnum.float32]: 4,
+    [dtypeEnum.float64]: 8,
+    [dtypeEnum.ascii]: 1,
   }
   const defaultDtype = dtypeEnum.int32;
+  const defaultDsize = dtypeSize[dtypeEnum.int32];
   const [state, setState] = React.useState({
     columns: [
       { title: 'Offset', field: 'offset' },
@@ -136,34 +150,75 @@ function BookmarkTable(props) {
         field: 'dataType',
         lookup: dtypeLookup,
       },
+      { title: 'Data size', field: 'dataSize' },
       { title: 'Value', field: 'value', type: 'numeric', editable: 'never' },
       { title: 'Hex Value', field: 'hexValue', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', name: '', dataType: defaultDtype, value: '', hexValue: '' },
+      { offset: '0x00000000', name: '', dataType: defaultDtype, dataSize: defaultDsize, value: '', hexValue: '' },
     ],
     isLittleEndian: false,
   });
 
+
+  function validateDataSize(newData) {
+    const dtype = parseInt(newData['dataType']);
+    if (dtype === dtypeEnum.ascii) {
+      const maxLetters = 100;
+      const minLetters = 1;
+      let dataSizeInt = parseInt(newData['dataSize']);
+      if (isNaN(dataSizeInt) || dataSizeInt < minLetters || dataSizeInt > maxLetters) {
+        newData['dataSize'] = 1;
+      }
+      else {
+        newData['dataSize'] = dataSizeInt;
+      }
+    }
+    else {
+      console.log("not ascii");
+      newData['dataSize'] = dtypeSize[dtype];
+    }
+  }
+
   function validateInput(oldData, newData) {
+    // validate offset
     const offsetInt = parseInt(newData['offset']);
     const minOffset = 0;
     const maxOffset = 18446744073709551615; // = Math.pow(2, 64) - 1
     if (isNaN(offsetInt) || offsetInt < minOffset || offsetInt > maxOffset) {
       newData['offset'] = '0x0000'
     }
+    // validate dataType
     if (typeof newData['dataType'] == 'undefined') {
       newData['dataType'] = defaultDtype;
       console.log('defaultDtype :', defaultDtype);
     }
+    // validate dataSize
+    validateDataSize(newData);
     setState(prevState => {
       const data = [...prevState.data];
       data[data.indexOf(oldData)] = newData;
       return { ...prevState, data };
     });
   }
+  function getAsciiChars(dataView, offsetInt, numLetters, isLittleEndian) {
+    let byteArr = [];
+    const firstLetter = 32; // 'SP'
+    const lastLetter = 126; // '~'
+    const defaultLetter = 46; // '.'
+    const sizeOfChar = 1;
+    for (let i = 0; i < numLetters; ++i) {
+      let val = dataView.getUint8(offsetInt + i * sizeOfChar, isLittleEndian);
+      if (val < firstLetter || val > lastLetter) {
+        val = defaultLetter;
+      }
+      byteArr.push(val);
+    }
+    let res = String.fromCharCode(...byteArr);
+    return res;
+  }
 
-  function readAsType(dtype, dataView, offsetInt) {
+  function readAsType(dtype, dataView, offsetInt, dataSize) {
     let res = 0;
     if (dtype === dtypeEnum.int8) {
       res = dataView.getInt8(offsetInt, state.isLittleEndian);
@@ -189,6 +244,9 @@ function BookmarkTable(props) {
     else if (dtype === dtypeEnum.float64) {
       res = dataView.getFloat64(offsetInt, state.isLittleEndian);
     }
+    else if (dtype === dtypeEnum.ascii) {
+      res = getAsciiChars(dataView, offsetInt, dataSize, state.isLittleEndian);
+    }
     else {
       console.log('Unkown Data Type!');
     }
@@ -196,7 +254,6 @@ function BookmarkTable(props) {
   }
   function readValue(fin, oldData, newData) {
     let f = fin.current.files[0];
-    let readData = -1;
     console.log('newData[dataType]')
     console.log(newData['dataType'])
     if (typeof f !== 'undefined') {
@@ -219,7 +276,8 @@ function BookmarkTable(props) {
           return;
         }
         const dtypeInt = parseInt(newData.dataType);
-        const readData = readAsType(dtypeInt, view, offsetInt)
+        const dataSizeInt = parseInt(newData.dataSize);
+        const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt)
         setState(prevState => {
           const data = [...prevState.data];
           newData['value'] = readData;
@@ -278,6 +336,10 @@ function BookmarkTable(props) {
     });
   }
 
+  function formatInput(newData) {
+    formatOffset(newData);
+  }
+
   const chipLabel = state.isLittleEndian ? "Little Endian" : "Big Endian";
   return (
     <MaterialTable
@@ -295,7 +357,7 @@ function BookmarkTable(props) {
                 return { ...prevState, data };
               });
               validateInput(newData, newData);
-              formatOffset(newData);
+              formatInput(newData)
               readValue(props.fin, newData, newData);
             }, 0);
           }),
@@ -304,7 +366,7 @@ function BookmarkTable(props) {
             resolve();
             if (oldData) {
               validateInput(oldData, newData);
-              formatOffset(newData);
+              formatInput(newData)
               readValue(props.fin, oldData, newData);
             }
           }),
