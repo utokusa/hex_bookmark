@@ -180,6 +180,16 @@ function BookmarkTable(props) {
     }
   }
 
+  function validateName(newData) {
+    const maxNameLength = 100;
+    if (typeof newData['name'] == 'undefined') {
+      return;
+    }
+    if (newData['name'].length > maxNameLength) {
+      newData['name'] = newData['name'].slice(0, maxNameLength);
+    }
+  }
+
   function validateInput(oldData, newData) {
     // validate offset
     const offsetInt = parseInt(newData['offset']);
@@ -195,6 +205,7 @@ function BookmarkTable(props) {
     }
     // validate dataSize
     validateDataSize(newData);
+    validateName(newData);
     setState(prevState => {
       const data = [...prevState.data];
       data[data.indexOf(oldData)] = newData;
