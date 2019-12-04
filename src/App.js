@@ -218,34 +218,40 @@ function BookmarkTable(props) {
     return res;
   }
 
-  function readAsType(dtype, dataView, offsetInt, dataSize) {
+  function readAsType(dtype, bufferView, offsetInt, dataSize) {
     let res = 0;
+    // check bounds of data
+    if (offsetInt + dataSize > bufferView.byteLength) {
+      return 'Offset out of bounds';
+    }
+
+    // read data
     if (dtype === dtypeEnum.int8) {
-      res = dataView.getInt8(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt8(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint8) {
-      res = dataView.getUint8(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint8(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.int16) {
-      res = dataView.getInt16(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt16(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint16) {
-      res = dataView.getUint16(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint16(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.int32) {
-      res = dataView.getInt32(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt32(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint32) {
-      res = dataView.getUint32(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint32(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.float32) {
-      res = dataView.getFloat32(offsetInt, state.isLittleEndian);
+      res = bufferView.getFloat32(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.float64) {
-      res = dataView.getFloat64(offsetInt, state.isLittleEndian);
+      res = bufferView.getFloat64(offsetInt, state.isLittleEndian);
     }
     else if (dtype === dtypeEnum.ascii) {
-      res = getAsciiChars(dataView, offsetInt, dataSize, state.isLittleEndian);
+      res = getAsciiChars(bufferView, offsetInt, dataSize, state.isLittleEndian);
     }
     else {
       console.log('Unkown Data Type!');
@@ -263,8 +269,12 @@ function BookmarkTable(props) {
   }
 
   function readAsHex(buffer, offsetInt, dataSizeInt) {
+    // check bounds of data
+    if (offsetInt + dataSizeInt > buffer.byteLength) {
+      return '';
+    }
     let byteArr = new Uint8Array(buffer);
-    return buf2hex(byteArr.slice(offsetInt, dataSizeInt));
+    return buf2hex(byteArr.slice(offsetInt, offsetInt + dataSizeInt));
   }
 
   function readValue(fin, oldData, newData) {
