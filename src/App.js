@@ -152,10 +152,10 @@ function BookmarkTable(props) {
       },
       { title: 'Data size', field: 'dataSize' },
       { title: 'Value', field: 'value', type: 'numeric', editable: 'never' },
-      { title: 'Hex Value', field: 'hexValue', editable: 'never' },
+      { title: 'Hex Dump', field: 'hexDump', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', name: '', dataType: defaultDtype, dataSize: defaultDsize, value: '', hexValue: '' },
+      { offset: '0x00000000', name: '', dataType: defaultDtype, dataSize: defaultDsize, value: '', hexDump: '' },
     ],
     isLittleEndian: false,
   });
@@ -293,11 +293,11 @@ function BookmarkTable(props) {
         const dtypeInt = parseInt(newData.dataType);
         const dataSizeInt = parseInt(newData.dataSize);
         const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt);
-        const hexData = readAsHex(buffer, offsetInt, dataSizeInt);
+        const hexDump = readAsHex(buffer, offsetInt, dataSizeInt);
         setState(prevState => {
           const data = [...prevState.data];
           newData['value'] = readData;
-          newData['hexValue'] = hexData;
+          newData['hexDump'] = hexDump;
           data[data.indexOf(oldData)] = newData;
           return { ...prevState, data };
         });
