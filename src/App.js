@@ -3,7 +3,9 @@ import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
+import SaveIcon from '@material-ui/icons/Save';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import MaterialTable, { MTableToolbar } from 'material-table';
@@ -140,7 +142,9 @@ function BookmarkTable(props) {
     [dtypeEnum.ascii]: 1,
   }
   const defaultDtype = dtypeEnum.int32;
+  const defaultDtypeStr = String(defaultDtype);
   const defaultDsize = dtypeSize[dtypeEnum.int32];
+  let bookmarkFile = React.createRef();
   const [state, setState] = React.useState({
     columns: [
       { title: 'Offset', field: 'offset' },
@@ -155,11 +159,11 @@ function BookmarkTable(props) {
       { title: 'Hex Dump', field: 'hexDump', editable: 'never' },
     ],
     data: [
-      { offset: '0x00000000', name: '', dataType: defaultDtype, dataSize: defaultDsize, value: '', hexDump: '' },
+      { offset: '0x00000000', name: '', dataType: defaultDtypeStr, dataSize: defaultDsize, value: '', hexDump: '' },
     ],
     isLittleEndian: false,
   });
-
+  const classes = useStyles();
 
   function validateDataSize(newData) {
     const dtype = parseInt(newData['dataType']);
@@ -342,6 +346,7 @@ function BookmarkTable(props) {
       for (let x in data) {
         console.log(data[x]);
         validateInput(data[x], data[x]);
+        formatInput(data[x]);
         readValue(props.fin, data[x], data[x]);
       }
       return { ...prevState, data };
@@ -360,6 +365,20 @@ function BookmarkTable(props) {
     updateTableValues();
   }
 
+  function saveBookmark() {
+    let bookmark = [];
+    for (let x in state.data) {
+      let row = state.data[x];
+      bookmark.push({ offset: row['offset'], name: row['name'], dataType: row['dataType'], dataSize: row['dataSize'], })
+    }
+    const string = JSON.stringify(bookmark);
+    const blob = new Blob([string], { "type": "text/plain" });
+    let link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = 'my_hex_bookmark.json'
+    link.click()
+  }
+
   function formatOffset(newData) {
     setState(prevState => {
       const data = [...prevState.data];
@@ -376,6 +395,32 @@ function BookmarkTable(props) {
 
   function formatInput(newData) {
     formatOffset(newData);
+  }
+
+  function handleFileSelect() {
+    let f = bookmarkFile.current.files[0];
+    if (typeof f !== 'undefined') {
+      let reader = new FileReader();
+      reader.onload = function (e) {
+        console.log("reading data...");
+        let obj = JSON.parse(e.target.result);
+        setState(prevState => {
+          const data = [];
+          for (let x in obj) {
+            console.log(obj[x]);
+            data.push(obj[x]);
+          }
+          return { ...prevState, data };
+        });
+        updateTableValues();
+        return;
+      }
+      reader.onerror = function (e) {
+        console.error('reading failed');
+      };
+      reader.onload = reader.onload.bind(this);
+      reader.readAsText(f);
+    }
   }
 
   const chipLabel = state.isLittleEndian ? "Little Endian" : "Big Endian";
@@ -404,7 +449,7 @@ function BookmarkTable(props) {
             resolve();
             if (oldData) {
               validateInput(oldData, newData);
-              formatInput(newData)
+              formatInput(newData);
               readValue(props.fin, oldData, newData);
             }
           }),
@@ -430,6 +475,35 @@ function BookmarkTable(props) {
                 color="secondary"
                 onClick={toggleByteOder}
               />
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                className={classes.button}
+                startIcon={<SaveIcon />}
+                onClick={saveBookmark}
+              >
+                Save Bookmark
+              </Button>
+              <input
+                accept="application/json"
+                className={classes.input}
+                id="contained-button-file"
+                multiple
+                type="file"
+                ref={bookmarkFile}
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="contained-button-file">
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  size="small"
+                  component="span"
+                >
+                  Load Bookmark
+                </Button>
+              </label>
             </div>
           </div>
         ),
