@@ -74,70 +74,59 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-// --------------------------------------------------------------------------
-class HexBookmark extends React.Component {
-  constructor(props) {
-    super(props);
-    this.fileInput = React.createRef();
-    this.state = { fileInfo: "Input Binary File", data: "" };
-    this.handleChangeInput = this.handleChangeInput.bind(this);
+function HexBookmark(props) {
+  const [state, setState] = React.useState({ fileInfo: "Input Binary File", data: "" });
+  let fileInput = React.createRef();
+
+  function handleChangeInput(newFileInfo, newData) {
+    setState({ fileInfo: newFileInfo, data: newData });
   }
 
-  handleChangeInput(newFileInfo, newData) {
-    this.setState({ fileInfo: newFileInfo, data: newData });
-  }
-
-  render() {
-    return (
-      <div>
-        <MuiThemeProvider theme={theme}>
-          <AppBar position="static" color="default">
-            <Toolbar>
-              <Typography
-                variant="h3"
-                color="inherit"
-              >
-                Hex Bookmark
-              </Typography>
-              <div style={{ marginLeft: '1.5em' }}>
-                <img width={50} height={50} src={logo} alt="" />
-              </div>
-            </Toolbar>
-          </AppBar>
-          <BinaryFileInput
-            fin={this.fileInput}
-            onChange={this.handleChangeInput}
-            fileInfo={this.state.fileInfo}
-            data={this.state.data}
-          />
-          <Bookmark
-            fin={this.fileInput}
-          />
-        </MuiThemeProvider>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <MuiThemeProvider theme={theme}>
+        <AppBar position="static" color="default">
+          <Toolbar>
+            <Typography
+              variant="h3"
+              color="inherit"
+            >
+              Hex Bookmark
+            </Typography>
+            <div style={{ marginLeft: '1.5em' }}>
+              <img width={50} height={50} src={logo} alt="" />
+            </div>
+          </Toolbar>
+        </AppBar>
+        <BinaryFileInput
+          fin={fileInput}
+          onChange={handleChangeInput}
+          fileInfo={state.fileInfo}
+          data={state.data}
+        />
+        <Bookmark
+          fin={fileInput}
+        />
+      </MuiThemeProvider>
+    </div>
+  );
 }
 
-// --------------------------------------------------------------------------
-class Bookmark extends React.Component {
+function Bookmark(props) {
+  return (
+    <Box
+      m={2}
+      p={1}
+      style={{ width: '94vw', height: '70rem' }}
+    >
+      <BookmarkTable
+        boxShadow={3}
+        bgcolor="background.paper"
+        fin={props.fin}
+      />
+    </Box>
 
-  render() {
-    return (
-      <Box
-        m={2}
-        p={1}
-        style={{ width: '94vw', height: '70rem' }}
-      >
-        <BookmarkTable
-          boxShadow={3}
-          bgcolor="background.paper"
-          fin={this.props.fin}
-        />
-      </Box>
-
-    );
-  }
+  );
 }
 
 function BookmarkTable(props) {
