@@ -80,10 +80,10 @@ class HexBookmark extends React.Component {
     super(props);
     this.fileInput = React.createRef();
     this.state = { fileInfo: "Input Binary File", data: "" };
-    this.onChangeInput = this.onChangeInput.bind(this);
+    this.handleChangeInput = this.handleChangeInput.bind(this);
   }
 
-  onChangeInput(newFileInfo, newData) {
+  handleChangeInput(newFileInfo, newData) {
     this.setState({ fileInfo: newFileInfo, data: newData });
   }
 
@@ -106,7 +106,7 @@ class HexBookmark extends React.Component {
           </AppBar>
           <BinaryFileInput
             fin={this.fileInput}
-            onChange={this.onChangeInput}
+            onChange={this.handleChangeInput}
             fileInfo={this.state.fileInfo}
             data={this.state.data}
           />
