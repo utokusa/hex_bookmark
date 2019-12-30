@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
+  <g fill="none" fill-rule="evenodd" stroke="#000" transform="translate(-2 1)">
+    <path d="M27,0 L7,0 C4.79,0 3.02,1.79 3.02,4 L3,36 L17,30 L31,36 L31,4 C31,1.79 29.21,0 27,0 Z"/>
+    <text fill="#000" font-family="CourierNewPSMT, Courier New" font-size="12">
+      <tspan x="9.799" y="12">10</tspan> <tspan x="9.799" y="26">01</tspan>
+    </text>
+  </g>
+</svg>
