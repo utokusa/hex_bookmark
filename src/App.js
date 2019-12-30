@@ -368,7 +368,7 @@ function BookmarkTable(props) {
       const data = [...prevState.data];
       for (let x in data) {
         validateInput(data[x], data[x]);
-        formatInput(data[x]);
+        formatInput(data[x], data[x]);
         readValue(props.fin, data[x], data[x]);
       }
       return { ...prevState, data };
@@ -397,7 +397,7 @@ function BookmarkTable(props) {
     link.click()
   }
 
-  function formatOffset(newData) {
+  function formatOffset(oldData, newData) {
     setState(prevState => {
       const data = [...prevState.data];
       const offsetInt = parseInt(newData['offset']);
@@ -405,13 +405,13 @@ function BookmarkTable(props) {
       const border = 4294967295; // Math.pow(2, 32) - 1
       const numDigits = offsetInt > border ? 16 : 8;
       newData['offset'] = '0x' + ((offsetInt).toString(radix)).toUpperCase().padStart(numDigits, '0');
-      data[data.indexOf(newData)] = newData;
+      data[data.indexOf(oldData)] = newData;
       return { ...prevState, data };
     });
   }
 
-  function formatInput(newData) {
-    formatOffset(newData);
+  function formatInput(oldData, newData) {
+    formatOffset(oldData, newData);
   }
 
   function handleFileSelect() {
@@ -455,7 +455,7 @@ function BookmarkTable(props) {
                 return { ...prevState, data };
               });
               validateInput(newData, newData);
-              formatInput(newData)
+              formatInput(newData, newData)
               readValue(props.fin, newData, newData);
             }, 0);
           }),
@@ -464,7 +464,7 @@ function BookmarkTable(props) {
             resolve();
             if (oldData) {
               validateInput(oldData, newData);
-              formatInput(newData);
+              formatInput(oldData, newData);
               readValue(props.fin, oldData, newData);
             }
           }),
