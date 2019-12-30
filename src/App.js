@@ -264,7 +264,7 @@ function BookmarkTable(props) {
     return res;
   }
 
-  function readAsType(dtype, bufferView, offsetInt, dataSize) {
+  function readAsType(dtype, bufferView, offsetInt, dataSize, isLittleEndian) {
     let res = 0;
     // check bounds of data
     if (offsetInt + dataSize > bufferView.byteLength) {
@@ -273,31 +273,31 @@ function BookmarkTable(props) {
 
     // read data
     if (dtype === dtypeEnum.int8) {
-      res = bufferView.getInt8(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt8(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint8) {
-      res = bufferView.getUint8(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint8(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.int16) {
-      res = bufferView.getInt16(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt16(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint16) {
-      res = bufferView.getUint16(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint16(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.int32) {
-      res = bufferView.getInt32(offsetInt, state.isLittleEndian);
+      res = bufferView.getInt32(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.uint32) {
-      res = bufferView.getUint32(offsetInt, state.isLittleEndian);
+      res = bufferView.getUint32(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.float32) {
-      res = bufferView.getFloat32(offsetInt, state.isLittleEndian);
+      res = bufferView.getFloat32(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.float64) {
-      res = bufferView.getFloat64(offsetInt, state.isLittleEndian);
+      res = bufferView.getFloat64(offsetInt, isLittleEndian);
     }
     else if (dtype === dtypeEnum.ascii) {
-      res = getAsciiChars(bufferView, offsetInt, dataSize, state.isLittleEndian);
+      res = getAsciiChars(bufferView, offsetInt, dataSize, isLittleEndian);
     }
     else {
       console.log('Unkown Data Type!');
@@ -342,7 +342,7 @@ function BookmarkTable(props) {
         }
         const dtypeInt = parseInt(newData.dataType);
         const dataSizeInt = parseInt(newData.dataSize);
-        const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt);
+        const readData = readAsType(dtypeInt, view, offsetInt, dataSizeInt, state.isLittleEndian);
         const hexDump = readAsHex(buffer, offsetInt, dataSizeInt);
         setState(prevState => {
           const data = [...prevState.data];
