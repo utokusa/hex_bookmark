@@ -532,6 +532,9 @@ function BookmarkTable(props) {
           onRowUpdate: (newData, oldData) => props.onRowUpdate(newData, oldData),
           onRowDelete: oldData => props.onRowDelete(oldData),
         }}
+        options={{
+          exportButton: true
+        }}
         components={{
           Toolbar: props => (
             <div>
