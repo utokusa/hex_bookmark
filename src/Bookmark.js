@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import SaveIcon from '@material-ui/icons/Save';
 import MaterialTable, { MTableToolbar } from 'material-table';
 import FileSelectButton from './FileSelectButton'
-
+import Container from '@material-ui/core/Container';
 
 const useStyles = makeStyles(theme => ({
   input: {
@@ -18,28 +18,27 @@ const useStyles = makeStyles(theme => ({
 
 export default function Bookmark(props) {
   return (
-    <Box
-      m={2}
-      p={1}
-      style={{ width: '94vw', height: '70rem' }}
-    >
-      <BookmarkTable
-        boxShadow={3}
-        bgcolor="background.paper"
-        fin={props.fin}
-        onToggleByteOder={props.onToggleByteOder}
-        onSaveBookmark={props.onSaveBookmark}
-        onBookmarkLoad={props.onBookmarkLoad}
-        isLittleEndian={props.isLittleEndian}
-        columns={props.columns}
-        data={props.data}
-        onRowAdd={props.onRowAdd}
-        onRowUpdate={props.onRowUpdate}
-        onRowDelete={props.onRowDelete}
-        bookmarkFile={props.bookmarkFile}
-      />
-    </Box>
-
+    <Container>
+      <Box
+        mt={2}
+      >
+        <BookmarkTable
+          boxShadow={3}
+          bgcolor="background.paper"
+          fin={props.fin}
+          onToggleByteOder={props.onToggleByteOder}
+          onSaveBookmark={props.onSaveBookmark}
+          onBookmarkLoad={props.onBookmarkLoad}
+          isLittleEndian={props.isLittleEndian}
+          columns={props.columns}
+          data={props.data}
+          onRowAdd={props.onRowAdd}
+          onRowUpdate={props.onRowUpdate}
+          onRowDelete={props.onRowDelete}
+          bookmarkFile={props.bookmarkFile}
+        />
+      </Box>
+    </Container>
   );
 }
 
