@@ -15,7 +15,7 @@ function App(props) {
   const classes = useStyles(props);
   return (
     <div className={classes.app}>
-      <HexBookmark />
+      <HexBookmarkApp />
       <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"></link>
     </div>
   );
@@ -74,14 +74,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function HexBookmark(props) {
-  const [state, setState] = React.useState({ fileInfo: "Input Binary File", data: "" });
-  let fileInput = React.createRef();
-
-  function handleChangeInput(newFileInfo, newData) {
-    setState({ fileInfo: newFileInfo, data: newData });
-  }
-
+function HexBookmarkApp(props) {
   return (
     <div>
       <MuiThemeProvider theme={theme}>
@@ -98,38 +91,36 @@ function HexBookmark(props) {
             </div>
           </Toolbar>
         </AppBar>
-        <BinaryFileInput
-          fin={fileInput}
-          onChange={handleChangeInput}
-          fileInfo={state.fileInfo}
-          data={state.data}
-        />
-        <Bookmark
-          fin={fileInput}
-        />
+        <HexBookmark />
       </MuiThemeProvider>
     </div>
   );
 }
 
-function Bookmark(props) {
-  return (
-    <Box
-      m={2}
-      p={1}
-      style={{ width: '94vw', height: '70rem' }}
-    >
-      <BookmarkTable
-        boxShadow={3}
-        bgcolor="background.paper"
-        fin={props.fin}
-      />
-    </Box>
-
-  );
+class HexBookmark extends React.Component {
+  constructor(props) {
+    super(props);
+    this.fileInput = React.createRef();
+    this.bookmarkFile = React.createRef();
+  }
+  render() {
+    return (
+      <div>
+        <HexBookmarkBody
+          fin={this.fileInput}
+          bookmarkFile={this.bookmarkFile}
+        />
+      </div>
+    );
+  }
 }
 
-function BookmarkTable(props) {
+function HexBookmarkBody(props) {
+  const [inputBin, setInputBin] = React.useState({ fileInfo: "Input Binary File", data: "" });
+  function handleChangeInput(newFileInfo, newData) {
+    setInputBin({ fileInfo: newFileInfo, data: newData });
+  }
+
   const dtypeEnum = {
     int8: 0,
     uint8: 1,
@@ -166,7 +157,6 @@ function BookmarkTable(props) {
   const defaultDtype = dtypeEnum.int32;
   const defaultDtypeStr = String(defaultDtype);
   const defaultDsize = dtypeSize[dtypeEnum.int32];
-  let bookmarkFile = React.createRef();
   const [state, setState] = React.useState({
     columns: [
       { title: 'Offset', field: 'offset' },
@@ -185,7 +175,7 @@ function BookmarkTable(props) {
     ],
     isLittleEndian: true,
   });
-  const classes = useStyles();
+
 
   function validateDataSize(newData) {
     const dtype = parseInt(newData['dataType']);
@@ -364,28 +354,6 @@ function BookmarkTable(props) {
     });
   }
 
-  function toggleByteOder() {
-    setState(prevState => {
-      prevState.isLittleEndian = !prevState.isLittleEndian;
-      return { ...prevState }
-    });
-    updateTableValues();
-  }
-
-  function saveBookmark() {
-    let bookmark = [];
-    for (let x in state.data) {
-      let row = state.data[x];
-      bookmark.push({ offset: row['offset'], name: row['name'], dataType: row['dataType'], dataSize: row['dataSize'], })
-    }
-    const string = JSON.stringify(bookmark);
-    const blob = new Blob([string], { "type": "text/plain" });
-    let link = document.createElement('a')
-    link.href = window.URL.createObjectURL(blob)
-    link.download = 'my_hex_bookmark.json'
-    link.click()
-  }
-
   function formatOffset(oldData, newData) {
     setState(prevState => {
       const data = [...prevState.data];
@@ -403,8 +371,30 @@ function BookmarkTable(props) {
     formatOffset(oldData, newData);
   }
 
-  function handleFileSelect() {
-    let f = bookmarkFile.current.files[0];
+  function handleToggleByteOder() {
+    setState(prevState => {
+      prevState.isLittleEndian = !prevState.isLittleEndian;
+      return { ...prevState }
+    });
+    updateTableValues();
+  }
+
+  function handleSaveBookmark() {
+    let bookmark = [];
+    for (let x in state.data) {
+      let row = state.data[x];
+      bookmark.push({ offset: row['offset'], name: row['name'], dataType: row['dataType'], dataSize: row['dataSize'], })
+    }
+    const string = JSON.stringify(bookmark);
+    const blob = new Blob([string], { "type": "text/plain" });
+    let link = document.createElement('a')
+    link.href = window.URL.createObjectURL(blob)
+    link.download = 'my_hex_bookmark.json'
+    link.click()
+  }
+
+  function handleBookmarkLoad() {
+    let f = props.bookmarkFile.current.files[0];
     if (typeof f !== 'undefined') {
       let reader = new FileReader();
       reader.onload = function (e) {
@@ -427,113 +417,183 @@ function BookmarkTable(props) {
     }
   }
 
-  const byteOrderLabal = state.isLittleEndian ? "Little Endian" : "Big Endian";
-  return (
-    <MaterialTable
-      title="Bookmarks"
-      columns={state.columns}
-      data={state.data}
-      editable={{
-        onRowAdd: newData =>
-          new Promise(resolve => {
-            setTimeout(() => {
-              resolve();
-              setState(prevState => {
-                const data = [...prevState.data];
-                data.push(newData);
-                return { ...prevState, data };
-              });
-              validateInput(newData, newData);
-              formatInput(newData, newData)
-              readValue(props.fin, newData, newData);
-            }, 0);
-          }),
-        onRowUpdate: (newData, oldData) =>
-          new Promise(resolve => {
-            resolve();
-            if (oldData) {
-              validateInput(oldData, newData);
-              formatInput(oldData, newData);
-              readValue(props.fin, oldData, newData);
-            }
-          }),
-        onRowDelete: oldData =>
-          new Promise(resolve => {
-            setTimeout(() => {
-              resolve();
-              setState(prevState => {
-                const data = [...prevState.data];
-                data.splice(data.indexOf(oldData), 1);
-                return { ...prevState, data };
-              });
-            }, 0);
-          }),
-      }}
-      components={{
-        Toolbar: props => (
-          <div>
-            <MTableToolbar {...props} />
-            <Box
-              display="flex"
-              flexDirection="row"
-              alignItems="center"
-              mx={3}
-            >
-              <Button
-                variant="outlined"
-                color="primary"
-                size="small"
-                onClick={toggleByteOder}
-                style={{ width: '9rem' }}
-              >
-                {byteOrderLabal}
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                className={classes.button}
-                startIcon={<SaveIcon />}
-                onClick={saveBookmark}
+  function handleRowAdd(newData) {
+    return new Promise(resolve => {
+      resolve();
+      setState(prevState => {
+        const data = [...prevState.data];
+        data.push(newData);
+        return { ...prevState, data };
+      });
+      validateInput(newData, newData);
+      formatInput(newData, newData)
+      readValue(props.fin, newData, newData);
+    });
+  }
 
+  function handleRowUpdate(newData, oldData) {
+    return new Promise(resolve => {
+      resolve();
+      if (oldData) {
+        validateInput(oldData, newData);
+        formatInput(oldData, newData);
+        readValue(props.fin, oldData, newData);
+      }
+    });
+  }
+
+  function handleRowDelete(oldData) {
+    return new Promise(resolve => {
+      resolve();
+      setState(prevState => {
+        const data = [...prevState.data];
+        data.splice(data.indexOf(oldData), 1);
+        return { ...prevState, data };
+      });
+    });
+  }
+
+  return (
+    <Box>
+      <BinaryFileInput
+        fin={props.fin}
+        onChange={handleChangeInput}
+        fileInfo={inputBin.fileInfo}
+        data={inputBin.data}
+      />
+      <Bookmark
+        fin={props.fin}
+        onToggleByteOder={handleToggleByteOder}
+        onSaveBookmark={handleSaveBookmark}
+        onBookmarkLoad={handleBookmarkLoad}
+        isLittleEndian={state.isLittleEndian}
+        columns={state.columns}
+        data={state.data}
+        onRowAdd={handleRowAdd}
+        onRowUpdate={handleRowUpdate}
+        onRowDelete={handleRowDelete}
+        bookmarkFile={props.bookmarkFile}
+      />
+    </Box>
+  );
+}
+
+function Bookmark(props) {
+  return (
+    <Box
+      m={2}
+      p={1}
+      style={{ width: '94vw', height: '70rem' }}
+    >
+      <BookmarkTable
+        boxShadow={3}
+        bgcolor="background.paper"
+        fin={props.fin}
+        onToggleByteOder={props.onToggleByteOder}
+        onSaveBookmark={props.onSaveBookmark}
+        onBookmarkLoad={props.onBookmarkLoad}
+        isLittleEndian={props.isLittleEndian}
+        columns={props.columns}
+        data={props.data}
+        onRowAdd={props.onRowAdd}
+        onRowUpdate={props.onRowUpdate}
+        onRowDelete={props.onRowDelete}
+        bookmarkFile={props.bookmarkFile}
+      />
+    </Box>
+
+  );
+}
+
+function BookmarkTable(props) {
+  let bookmarkFile = props.bookmarkFile;
+  const classes = useStyles();
+  function toggleByteOder() {
+    props.onToggleByteOder();
+  }
+
+  function saveBookmark() {
+    props.onSaveBookmark();
+  }
+
+  function handleBookmarkLoad() {
+    props.onBookmarkLoad();
+  }
+  const byteOrderLabal = props.isLittleEndian ? "Little Endian" : "Big Endian";
+  return (
+    <div>
+      <MaterialTable
+        title="Bookmarks"
+        columns={props.columns}
+        data={props.data}
+        editable={{
+          onRowAdd: newData => props.onRowAdd(newData),
+          onRowUpdate: (newData, oldData) => props.onRowUpdate(newData, oldData),
+          onRowDelete: oldData => props.onRowDelete(oldData),
+        }}
+        components={{
+          Toolbar: props => (
+            <div>
+              <MTableToolbar {...props} />
+              <Box
+                display="flex"
+                flexDirection="row"
+                alignItems="center"
+                mx={3}
               >
-                Save Bookmark
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={toggleByteOder}
+                  style={{ width: '9rem' }}
+                >
+                  {byteOrderLabal}
                 </Button>
-              <input
-                accept="application/json"
-                className={classes.input}
-                id="load-button-file"
-                multiple
-                type="file"
-                ref={bookmarkFile}
-                onChange={handleFileSelect}
-              />
-              <label htmlFor="load-button-file">
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
-                  component="span"
+                  className={classes.button}
+                  startIcon={<SaveIcon />}
+                  onClick={saveBookmark}
+
                 >
-                  Load Bookmark
+                  Save Bookmark
+              </Button>
+                <input
+                  accept="application/json"
+                  className={classes.input}
+                  id="load-button-file"
+                  type="file"
+                  ref={bookmarkFile}
+                  onChange={handleBookmarkLoad}
+                />
+                <label htmlFor="load-button-file">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    component="span"
+                  >
+                    Load Bookmark
                 </Button>
-              </label>
-            </Box>
-          </div>
-        ),
-      }}
-    />
+                </label>
+              </Box>
+            </div>
+          ),
+        }}
+      />
+    </div>
+
   );
 }
 
 
 function BinaryFileInput(props) {
-
   function handleFileSelect(newFileInfo, newData) {
     props.onChange(newFileInfo, newData);
   }
-
-
   return (
     <Box
       boxShadow={3}
@@ -576,7 +636,6 @@ function FileInput(props) {
       <input
         className={classes.input}
         id="contained-button-file"
-        multiple
         type="file"
         ref={props.fin}
         onChange={handleFileSelect}
