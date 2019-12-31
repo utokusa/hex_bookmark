@@ -2,6 +2,7 @@ import React from 'react';
 // import './App.css';
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
+import Link from '@material-ui/core/Link';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
@@ -76,6 +77,7 @@ function HexBookmarkApp(props) {
           </Toolbar>
         </AppBar>
         <HexBookmark />
+        <Copyright />
       </MuiThemeProvider>
     </div>
   );
@@ -97,6 +99,19 @@ class HexBookmark extends React.Component {
       </div>
     );
   }
+}
+
+function Copyright() {
+  return (
+    <Typography variant="body2" color="textSecondary" align="center">
+      {'Copyright © '}
+      <Link color="inherit" href="https://github.com/utokusa/">
+        Utokusa
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
 }
 
 export default App;
