@@ -119,6 +119,7 @@ function HexBookmarkBody(props) {
   const [inputBin, setInputBin] = React.useState({ fileInfo: "Input Binary File", data: "" });
   function handleChangeInput(newFileInfo, newData) {
     setInputBin({ fileInfo: newFileInfo, data: newData });
+    updateTableValues();
   }
 
   const dtypeEnum = {
