@@ -1,4 +1,7 @@
+# Hex Bookmark
+
 ## Demo
+
 [https://utokusa.github.io/hex_bookmark/](https://utokusa.github.io/hex_bookmark/)
 
 <img src="./screenshot.png" alt="Screenshot" style="zoom:30%;" />
@@ -17,3 +20,12 @@ Hex Bookmark is a binary viewer web app that uses tables. You can register the o
 - Data sorting
 - Save / load bookmarks locally
 - Export to csv file
+
+## Example bookmarks
+
+You can use the pre-edited bookmark in [./example_bookmark](https://github.com/utokusa/hex_bookmark/tree/master/sample_bookmarks). Right click and download.
+
+## Licence
+
+[LICENSE](https://raw.githubusercontent.com/utokusa/hex_bookmark/master/LICENSE)
+
